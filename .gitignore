@@ -17,3 +17,11 @@ lib*
 pip-self*
 .py[cod]
 __pycache__
+#sqllite user database
+users.db
+#certs keys and logs
+ansible-runner-service.log
+ansible_runner_service.crt
+ansible_runner_service.key
+samples/env/ssh_key
+samples/env/ssh_key.pub

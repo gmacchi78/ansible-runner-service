@@ -20,7 +20,7 @@ from runner_service.app import create_app
 from runner_service.utils import (fread,
                                   create_self_signed_cert,
                                   ssh_create_key,
-                                  RunnerServiceError)
+                                  RunnerServiceError, SecureContext)
 
 def signal_stop(*args):
     '''
@@ -178,6 +178,8 @@ def remove_artifacts_init():
     )
     remove_artifacts_thread.start()
 
+def create_secure_context():
+    SecureContext.get_or_create(configuration.settings.config_dir)
 
 def main(test_mode=False):
     # Setup log and ssh and other things present in all the environments
@@ -185,7 +187,7 @@ def main(test_mode=False):
 
     # setup ssl for the Flask http server
     ssl_context = get_ssl()
-
+    create_secure_context()
     app = create_app()
 
     if test_mode:

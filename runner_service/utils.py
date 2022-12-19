@@ -1,3 +1,4 @@
+from __future__ import annotations
 import os
 import shlex
 import shutil
@@ -279,3 +280,130 @@ def ssh_connect_ok(host, user=None, port=None):
             "configured for '{}'".format(host)
     else:
         return True, "OK:SSH connection check to {} successful".format(host)
+
+
+from dataclasses import dataclass
+@dataclass(frozen=True)
+class User:
+
+    name: str
+    expired: bool
+
+class InvalidUserException(Exception):
+    pass
+
+import random
+import string
+import sqlite3
+from sqlite3 import Error
+import bcrypt
+from typing import List
+class SecureContext:
+
+    
+    def __init__(self, ctx:str) -> None:
+        self.ctx=ctx
+        pass
+
+    def _create_password()->str:
+        letters = string.ascii_lowercase + string.ascii_uppercase + string.digits
+        result_str = ''.join(random.choice(letters) for i in range(10))
+        return result_str
+
+    def _execute(database: str, statement:str, params:tuple=None)->None:
+        conn = None
+        try:
+            conn = sqlite3.connect(database)
+            cur = conn.cursor()
+            if params is not None:
+                cur.execute(statement,params)
+            else:
+                cur.execute(statement)
+            conn.commit()
+        except Error as e:
+            print(e)
+            raise e
+        finally:
+            if conn is not None:
+                conn.close()
+
+    def _query(database: str, statement:str, params:tuple=None)->List[tuple]:
+        conn = None
+        try:
+            conn = sqlite3.connect(database)
+            cur = conn.cursor()
+            res = None
+            if params is not None:
+                res = cur.execute(statement,params)
+            else:
+                res = cur.execute(statement)
+            return res.fetchall()
+        except Error as e:
+            print(e)
+            raise e
+        finally:
+            if conn is not None:
+                conn.close()
+
+    def _create_database(database: str, admin_passwd:str)->None:
+        SecureContext._execute(database=database, statement="CREATE TABLE user(name TEXT PRIMARY KEY, password TEXT NOT NULL, expired INT NOT NULL)")
+        hashed = bcrypt.hashpw(admin_passwd.encode('utf-8'), bcrypt.gensalt())
+        SecureContext._execute(database=database, 
+            statement=f"INSERT INTO user (name,password, expired) VALUES (?, ?, ?)", 
+            params=('admin',hashed.decode('utf-8'),1))
+        
+        
+        os.chmod(database, 0o600)
+
+    def get_or_create(dir:str=None)->SecureContext:
+        if dir is None:
+            dir = configuration.settings.config_dir
+        database = os.path.join(dir, "users.db")
+        if os.path.exists(database):
+            return SecureContext(database)
+        else:
+            tmp_cred = SecureContext._create_password()
+            logger.info(f"Creating temporary admin credentials as {tmp_cred} ")
+            SecureContext._create_database(database, tmp_cred)
+            return SecureContext(database)
+
+    def get_user(self, user_name:str, passwd:str)->User:
+        res = SecureContext._query(self.ctx,"SELECT password, expired FROM user WHERE name = ? LIMIT 1", (user_name,))
+        if res is None or len(res)==0:
+            raise InvalidUserException
+        hashed = res[0][0]
+        if bcrypt.checkpw(passwd.encode('utf-8'), hashed.encode('utf-8')):
+            return User(name=user_name, expired=res[0][1]==1)
+        raise InvalidUserException
+
+    def update_password(self, user_name:str, old_passwd:str, new_passwd:str)->User:
+        self.get_user(
+            user_name=user_name, passwd=old_passwd
+        )
+        hashed = bcrypt.hashpw(new_passwd.encode('utf-8'), bcrypt.gensalt())
+        SecureContext._execute(database=self.ctx, 
+            statement=f"UPDATE user set password = ?, expired=0 WHERE name = ?", 
+            params=(hashed.decode('utf-8'),'admin'))
+        return self.get_user(
+            user_name=user_name, passwd=new_passwd
+        )
+
+
+from flask_httpauth import HTTPBasicAuth
+auth = HTTPBasicAuth()
+
+@auth.verify_password
+def verify(username, password):
+    if not (username and password):
+        return False
+    sc = SecureContext.get_or_create()
+    user:User = None
+    try:
+        user = sc.get_user(user_name=username, passwd=password)
+    except InvalidUserException:
+        logger.error("Invalid username or password")
+        return False
+    if user.expired:
+        logger.error(f"Password expired for user {username}")
+        return False
+    return True

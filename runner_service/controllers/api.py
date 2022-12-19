@@ -3,6 +3,7 @@ import os
 from flask_restful import Resource
 from flask import render_template, Response
 from .utils import log_request
+from runner_service.utils import auth
 
 import logging
 logger = logging.getLogger(__name__)
@@ -13,6 +14,7 @@ class API(Resource):
     app = None
 
     @log_request(logger)
+    @auth.login_required
     def get(self):
 
         app = API.app

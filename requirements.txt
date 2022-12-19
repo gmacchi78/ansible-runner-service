@@ -5,3 +5,5 @@ pyOpenSSL
 flask
 flask-restful
 flake8
+flask_httpauth
+bcrypt==3.2.2
