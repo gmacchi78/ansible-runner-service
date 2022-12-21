@@ -93,6 +93,7 @@ class PlaybookState(BaseResource):
         return response.__dict__, self.state_to_http[response.status]
 
     @log_request(logger)
+    @auth.login_required
     def delete(self, play_uuid):
         """
         DELETE {play_uuid}
