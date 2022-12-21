@@ -1,4 +1,4 @@
-
+from runner_service.utils import auth
 from flask_restful import request     # reqparse
 import threading
 import logging
@@ -208,6 +208,7 @@ class StartPlaybook(BaseResource):
     """ Start a playbook by name, returning the play's uuid """
 
     @log_request(logger)
+    @auth.login_required
     def post(self, playbook_name):
         """
         POST {playbook, var1, var2...}
@@ -289,6 +290,7 @@ class StartTaggedPlaybook(BaseResource):
     """ Start a playbook using tags to control which tasks run """
 
     @log_request(logger)
+    @auth.login_required
     def post(self, playbook_name, tags):
         """
         POST {playbook_name}/tags/{tags}

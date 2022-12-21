@@ -1,6 +1,6 @@
+from runner_service.utils import auth
 from flask_restful import request
 import yaml
-
 from .base import BaseResource
 from .utils import log_request
 
@@ -56,6 +56,7 @@ class HostVars(BaseResource):
         return response.__dict__, self.state_to_http[response.status]
 
     @log_request(logger)
+    @auth.login_required
     def delete(self, host_name, group_name):
         """
         DELETE
@@ -86,6 +87,7 @@ class HostVars(BaseResource):
         return response.__dict__, self.state_to_http[response.status]
 
     @log_request(logger)
+    @auth.login_required
     def post(self, host_name, group_name):
         """
         POST [?type=inventory|file]
@@ -196,6 +198,7 @@ class GroupVars(BaseResource):
         return response.__dict__, self.state_to_http[response.status]
 
     @log_request(logger)
+    @auth.login_required
     def delete(self, group_name):
         """
         DELETE
@@ -225,6 +228,7 @@ class GroupVars(BaseResource):
         return response.__dict__, self.state_to_http[response.status]
 
     @log_request(logger)
+    @auth.login_required
     def post(self, group_name):
         """
         POST [?type=file|inventory]

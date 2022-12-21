@@ -14,5 +14,6 @@ class BaseResource(Resource):
         "LOCKED": 409,
         "UNSUPPORTED": 415,
         "FAILED": 500,
-        "TIMEOUT": 504
+        "TIMEOUT": 504,
+        "BAD_REQUEST":400
     }

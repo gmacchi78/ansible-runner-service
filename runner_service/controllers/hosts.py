@@ -1,5 +1,5 @@
 from flask_restful import request
-
+from runner_service.utils import auth
 from .base import BaseResource
 from .utils import log_request
 from ..services.hosts import (get_hosts,
@@ -146,6 +146,7 @@ class HostMgmt(BaseResource):
 
 
     @log_request(logger)
+    @auth.login_required
     def post(self, host_name, group_name):
         """
         POST hosts/{host_name}/groups/{group_name}[?others=group2,group3]

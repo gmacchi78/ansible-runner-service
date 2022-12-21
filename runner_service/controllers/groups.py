@@ -1,5 +1,5 @@
 
-
+from runner_service.utils import auth
 from .base import BaseResource
 from .utils import log_request
 from ..services.groups import (get_groups,
@@ -89,6 +89,7 @@ class ManageGroups(BaseResource):
 
 
     @log_request(logger)
+    @auth.login_required
     def post(self, group_name):
         """
         POST {group_name}
@@ -118,6 +119,7 @@ class ManageGroups(BaseResource):
 
 
     @log_request(logger)
+    @auth.login_required
     def delete(self, group_name):
         """
         DELETE {group_name}
