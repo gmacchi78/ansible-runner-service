@@ -87,6 +87,7 @@ class HostDetails(BaseResource):
         return response.__dict__, self.state_to_http[response.status]
 
     @log_request(logger)
+    @auth.login_required
     def delete(self, host_name):
         """
         DELETE {host_name}
@@ -217,6 +218,7 @@ class HostMgmt(BaseResource):
         return response.__dict__, self.state_to_http[response.status]
 
     @log_request(logger)
+    @auth.login_required
     def delete(self, host_name, group_name):
         """
         DELETE hosts/{host_name}/group/{group_name}
