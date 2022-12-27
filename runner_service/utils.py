@@ -363,7 +363,7 @@ class SecureContext:
             return SecureContext(database)
         else:
             tmp_cred = SecureContext._create_password()
-            logger.info(f"Creating temporary admin credentials as {tmp_cred} ")
+            logger.info(f"Creating temporary admin credentials as {tmp_cred}")
             SecureContext._create_database(database, tmp_cred)
             return SecureContext(database)
 
